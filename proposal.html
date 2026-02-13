@@ -1,40 +1,124 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Someone Loves You 💖</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<style>
-body {
-  margin:0;
-  padding:0;
-  height:100vh;
-  font-family:Arial;
-  background:linear-gradient(135deg,#ff4e8a,#ff9a9e);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  overflow:hidden;
-  color:white;
-}
-.heart {
-  position:absolute;
-  font-size:20px;
-  animation: float 5s linear infinite;
-  pointer-events:none;
-}
-@keyframes float {
-  0% { transform: translateY(0) scale(1); opacity:1; }
-  100% { transform: translateY(-1000px) scale(2); opacity:0; }
-}
-.card {
-  background: rgba(255,255,255,0.2);
-  padding:50px;
-  border-radius:30px;
-  backdrop-filter: blur(10px);
-  text-align:center;
-  max-width:400px;
-  animation: pop 1s ease-in-out;
-}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>💗 Proposal 💗</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Arial', sans-serif;
+      text-align: center;
+      background: #ffccd5;
+      overflow: hidden;
+    }
+    h1 {
+      margin-top: 50px;
+      font-size: 2.5em;
+      color: #ff1a75;
+    }
+    .buttons {
+      margin-top: 30px;
+    }
+    button {
+      padding: 15px 25px;
+      margin: 20px;
+      font-size: 20px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      background-color: #ff4d6d;
+      color: white;
+      transition: all 0.3s ease;
+    }
+    button:hover {
+      transform: scale(1.1);
+    }
+    a {
+      display: block;
+      margin-top: 30px;
+      color: #333;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    /* Heart animation */
+    .heart {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: red;
+      transform: rotate(-45deg);
+      animation: float 4s infinite;
+    }
+    .heart::before,
+    .heart::after {
+      content: "";
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: red;
+      border-radius: 50%;
+    }
+    .heart::before {
+      top: -10px;
+      left: 0;
+    }
+    .heart::after {
+      left: 10px;
+      top: 0;
+    }
+    @keyframes float {
+      0% { transform: translateY(0) rotate(-45deg); opacity: 1;}
+      100% { transform: translateY(-600px) rotate(-45deg); opacity: 0;}
+    }
+  </style>
+</head>
+<body>
+  <h1 id="proposalText"></h1>
+  
+  <div class="buttons">
+    <button onclick="yesClick()">Yes 💖</button>
+    <button onclick="noClick()">No 😢</button>
+  </div>
+  
+  <a id="customLink" href="#" target="_blank">Visit the custom link</a>
+
+  <audio id="bgMusic" autoplay loop>
+    <source src="music.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    const yourName = localStorage.getItem('yourName') || 'You';
+    const myName = localStorage.getItem('myName') || 'Me';
+    const link = localStorage.getItem('customLink') || '#';
+
+    document.getElementById('proposalText').innerText = 
+      `${yourName}, will you be my special one? 💗 - ${myName}`;
+
+    const linkElement = document.getElementById('customLink');
+    linkElement.href = link;
+    linkElement.innerText = `Visit your link 💻`;
+
+    // Heart animation
+    setInterval(() => {
+      const heart = document.createElement('div');
+      heart.classList.add('heart');
+      heart.style.left = Math.random() * window.innerWidth + 'px';
+      heart.style.animationDuration = (2 + Math.random() * 3) + 's';
+      document.body.appendChild(heart);
+      setTimeout(() => heart.remove(), 4000);
+    }, 300);
+
+    function yesClick() {
+      alert('Yay! 💖 I knew you will say Yes!');
+    }
+
+    function noClick() {
+      alert('Oh no 😢 Maybe next time!');
+    }
+  </script>
+</body>
+</html>}
 @keyframes pop {
   from { transform: scale(0.5); opacity:0; }
   to { transform: scale(1); opacity:1; }
