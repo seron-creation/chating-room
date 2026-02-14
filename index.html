@@ -50,7 +50,7 @@ header{background:#202c33;padding:12px;display:flex;justify-content:space-betwee
 <div>Room: <span id="roomLabel"></span> <span id="typingIndicator"></span></div>
 <div>
 <button onclick="shareRoom()">Share</button>
-<button id="adminBtn" onclick="destroyRoom()" style="display:none">Delete</button>
+<button id="adminBtn" onclick="destroyRoomConfirm()" style="display:none">Delete</button>
 <button onclick="enterAdminCode()">Admin</button>
 </div>
 </header>
@@ -101,9 +101,7 @@ const db = getDatabase(app);
 const storage = getStorage(app);
 
 let room="", user="Seron", isAdmin=false, adminCode="", destroyTimeout;
-let userColors={}; // unique color per user
-
-// Join/Leave sounds
+let userColors={};
 const joinSound=new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
 const leaveSound=new Audio("https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg");
 
@@ -123,7 +121,6 @@ function generateAdminCode(){
   return digits+letters;
 }
 
-// random color
 function getUserColor(name){
   if(userColors[name]) return userColors[name];
   const colors=["#FF5722","#FF9800","#4CAF50","#03A9F4","#9C27B0","#FFC107"];
@@ -177,24 +174,24 @@ function listenMessages(){
       if(d.type==="voice") div.innerHTML=`<span class="user-color" style="color:${getUserColor(d.user)}">${d.user}:</span><br><audio controls src='${d.url}'></audio>`;
       chat.appendChild(div);
     });
-    document.getElementById("chat").scrollTop=document.getElementById("chat").scrollHeight;
+    chat.scrollTop=chat.scrollHeight;
+  });
+
+  // Typing indicator
+  onValue(ref(db,"rooms/"+room+"/typing"), snap=>{
+    let names=[];
+    snap.forEach(s=>names.push(s.key));
+    document.getElementById("typingIndicator").innerText=names.length?names.join(", ")+" is typing...":"";
   });
 }
 
-// TYPING INDICATOR
 let typingTimeout;
 function typing(){
   update(ref(db,"rooms/"+room+"/typing/"+user),true);
   clearTimeout(typingTimeout);
   typingTimeout=setTimeout(()=>{ remove(ref(db,"rooms/"+room+"/typing/"+user)); },1000);
 }
-onValue(ref(db,"rooms/"+room+"/typing"), snap=>{
-  let names=[];
-  snap.forEach(s=>{ names.push(s.key); });
-  document.getElementById("typingIndicator").innerText=names.length?names.join(", ")+" is typing...":"";
-});
 
-// SEND TEXT
 function sendMsg(){
   const text=document.getElementById("msg").value;
   if(!text) return;
@@ -202,7 +199,6 @@ function sendMsg(){
   document.getElementById("msg").value="";
 }
 
-// SEND IMAGE
 function sendImage(e){
   const file=e.target.files[0]; if(!file) return;
   const storageRef=sRef(storage,"images/"+Date.now()+"_"+file.name);
@@ -213,7 +209,6 @@ function sendImage(e){
   });
 }
 
-// VOICE
 let mediaRecorder, audioChunks=[];
 function startVoice(){
   if(mediaRecorder && mediaRecorder.state==="recording"){ mediaRecorder.stop(); return; }
@@ -236,27 +231,54 @@ function startVoice(){
   });
 }
 
-// LEAVE
 function leave(){ remove(ref(db,"rooms/"+room+"/users/"+user)); leaveSound.play(); location.href=location.pathname; }
 
-// DESTROY
-function destroyRoom(){ if(!isAdmin) return; showSharePopup(); setTimeout(()=>{ remove(ref(db,"rooms/"+room)); location.href=location.pathname; },1000); }
+function destroyRoomConfirm(){
+  if(!isAdmin) return;
+  if(confirm("Are you sure you want to destroy this room?")){
+    showSharePopup();
+    const btn=document.getElementById("sharePopupBtn");
+    btn.onclick=()=>{ 
+      const link=location.origin+location.pathname;
+      if(navigator.share) navigator.share({title:"Join Chat",text:"Join my room",url:link});
+      remove(ref(db,"rooms/"+room)); 
+      location.href=location.pathname; 
+    };
+  }
+}
 
-// ADMIN CODE
 function enterAdminCode(){ const code=prompt("Enter Admin Code:"); if(!code) return; get(ref(db,"rooms/"+room+"/adminCode")).then(snap=>{ if(snap.val()===code){ isAdmin=true; document.getElementById("adminBtn").style.display="inline-block"; alert("You are now an admin!"); } else alert("Incorrect code"); }); }
 
-// SHARE
-function shareRoom(){ let link=location.origin+location.pathname+"?room="+room; navigator.share?.({title:"Join Chat",text:"Join my room",url:link}) || alert(link); }
+function shareRoom(){ 
+  const link=location.origin+location.pathname+"?room="+room; 
+  if(navigator.share){
+    navigator.share({title:"Join Chat",text:"Join my room",url:link});
+  } else {
+    prompt("Copy this link to share:", link);
+  }
+}
 
-// SHARE POPUP
-function showSharePopup(){ document.getElementById("sharePopup").style.display="flex"; document.getElementById("sharePopupBtn").onclick=()=>{ let link=location.origin+location.pathname; if(navigator.share) navigator.share({title:"Join Chat",text:"Join my room",url:link}); else prompt("Copy and share this link:",link); }; }
+function showSharePopup(){
+  const popup=document.getElementById("sharePopup");
+  popup.style.display="flex";
+  const btn=document.getElementById("sharePopupBtn");
+  btn.onclick=()=>{
+    const link=location.origin+location.pathname+"?room="+room;
+    if(navigator.share){
+      navigator.share({title:"Join Chat",text:"Join my room",url:link}).then(()=>popup.style.display="none");
+    } else {
+      prompt("Copy this link to share:", link);
+      popup.style.display="none";
+    }
+  };
+}
+
 function closeSharePopup(){document.getElementById("sharePopup").style.display="none";}
 
-// AUTO JOIN
 function autoJoinFromLink(){ const params=new URLSearchParams(window.location.search); const r=params.get("room"); if(r){room=r;isAdmin=false;document.getElementById("adminBtn").style.display="none"; startChat(); showSharePopup();}}
 
-// AUTO DESTROY
-function scheduleDestroy(time){ const delay=time-Date.now(); if(delay>0) setTimeout(()=>destroyRoom(),delay); }
+function scheduleDestroy(time){ const delay=time-Date.now(); if(delay>0) setTimeout(()=>destroyRoomConfirm(),delay); }
+
 </script>
 </body>
 </html>
