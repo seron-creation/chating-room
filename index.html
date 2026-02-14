@@ -11,6 +11,8 @@ body{margin:0;font-family:Arial;background:linear-gradient(135deg,#1e1f29,#0b141
 .menu input{width:100%;padding:15px;font-size:16px;border-radius:8px;border:none;margin:10px 0;}
 .menu button{width:100%;padding:15px;margin:8px 0;font-size:18px;font-weight:bold;color:white;background:#ff5722;border:none;border-radius:10px;cursor:pointer;transition:all 0.3s;}
 .menu button:hover{background:#e64a19;transform:scale(1.03);}
+.menu .timer-buttons{display:flex;gap:10px;margin-bottom:10px;}
+.menu .timer-buttons button{flex:1;padding:12px;font-size:14px;}
 .roomCode{font-size:16px;margin-top:15px;text-align:center;}
 .container{width:95vw;max-width:420px;aspect-ratio:9/16;background:#111b21;display:flex;flex-direction:column;border-radius:12px;overflow:hidden;margin-top:20px;box-shadow:0 0 20px rgba(255,87,34,0.4);}
 header{background:#202c33;padding:12px;display:flex;justify-content:space-between;font-size:14px;align-items:center;}
@@ -25,11 +27,6 @@ header{background:#202c33;padding:12px;display:flex;justify-content:space-betwee
 .controls button{padding:12px;border-radius:8px;border:none;font-size:16px;cursor:pointer;background:#ff5722;color:white;font-weight:bold;transition:all 0.3s;}
 .controls button:hover{background:#e64a19;}
 .credit{margin-top:12px;color:#ff5722;font-size:14px;text-shadow:0 0 6px orange;text-align:center;}
-#sharePopup{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9999;display:flex;justify-content:center;align-items:center;}
-#sharePopup div{background:#202c33;padding:20px;border-radius:12px;text-align:center;color:white;max-width:90vw;}
-#sharePopup h3{color:#ff5722;margin-bottom:12px;}
-#sharePopup button{padding:12px 20px;font-size:16px;font-weight:bold;border:none;border-radius:8px;background:#ff5722;color:white;cursor:pointer;margin:5px;}
-#sharePopup .closeBtn{background:#555;}
 </style>
 </head>
 <body>
@@ -37,11 +34,16 @@ header{background:#202c33;padding:12px;display:flex;justify-content:space-betwee
 <!-- MENU -->
 <div id="menu" class="menu">
 <h2>Chat Room</h2>
-<button onclick="createRoom()">Create Room</button>
+
+<div class="timer-buttons">
+  <button onclick="createRoom(5)">Create Room 5m</button>
+  <button onclick="createRoom(10)">Create Room 10m</button>
+  <button onclick="createRoom(30)">Create Room 30m</button>
+</div>
+
 <input id="joinCode" placeholder="Enter Room Code">
 <button onclick="joinRoom()">Join Room</button>
 <div id="roomDisplay" class="roomCode"></div>
-<label>Destroy Timer (minutes, optional): <input id="destroyTimer" type="number" min="1" max="1440" placeholder="e.g. 10"></label>
 </div>
 
 <!-- CHAT PAGE -->
@@ -49,7 +51,6 @@ header{background:#202c33;padding:12px;display:flex;justify-content:space-betwee
 <header>
 <div>Room: <span id="roomLabel"></span> <span id="typingIndicator"></span></div>
 <div>
-<button onclick="shareRoom()">Share</button>
 <button id="adminBtn" onclick="destroyRoomConfirm()" style="display:none">Delete</button>
 <button onclick="enterAdminCode()">Admin</button>
 </div>
@@ -68,9 +69,6 @@ header{background:#202c33;padding:12px;display:flex;justify-content:space-betwee
 </div>
 
 <div class="credit">Created by: Seron</div>
-
-
-</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -120,29 +118,44 @@ function getUserColor(name){
   return userColors[name];
 }
 
-async function createRoom(){
-  room=await generateUniqueRoom();
-  adminCode=generateAdminCode();
-  isAdmin=true;
-  const timerVal=parseInt(document.getElementById("destroyTimer").value);
-  const destroyTime=timerVal?Date.now()+timerVal*60000:null;
-  set(ref(db,"rooms/"+room),{adminCode:adminCode,destroyTime});
-  document.getElementById("roomDisplay").innerHTML=`Room Code: ${room} <br> Admin Code: ${adminCode}`;
-  document.getElementById("adminBtn").style.display="inline-block";
-  startChat();
-  showSharePopup();
-  if(destroyTime) scheduleDestroy(destroyTime);
+async function createRoom(timerMinutes=0){
+  try {
+    room = await generateUniqueRoom();
+    adminCode = generateAdminCode();
+    isAdmin = true;
+
+    let destroyTime = timerMinutes>0 ? Date.now()+timerMinutes*60000 : null;
+    await set(ref(db,"rooms/"+room),{adminCode:adminCode,destroyTime});
+    
+    document.getElementById("roomDisplay").innerHTML=`Room Code: ${room} <br> Admin Code: ${adminCode}`;
+    document.getElementById("adminBtn").style.display="inline-block";
+
+    startChat();
+
+    if(destroyTime) scheduleDestroy(destroyTime);
+  } catch(err){
+    alert("Failed to create room: "+err);
+  }
 }
 
-function joinRoom(){
-  room=document.getElementById("joinCode").value;
-  if(!room) return alert("Enter valid room code");
-  isAdmin=false;
-  document.getElementById("adminBtn").style.display="none";
-  startChat();
-  showSharePopup();
+async function joinRoom(){
+  try {
+    const code = document.getElementById("joinCode").value.trim();
+    if(!code) return alert("Enter valid room code");
+
+    const snap = await get(ref(db,"rooms/"+code));
+    if(!snap.exists()) return alert("Room does not exist!");
+
+    room = code;
+    isAdmin = false;
+    document.getElementById("adminBtn").style.display="none";
+    startChat();
+  } catch(err){
+    alert("Failed to join room: "+err);
+  }
 }
 
+// --- CHAT FUNCTIONS ---
 function startChat(){
   document.getElementById("menu").style.display="none";
   document.getElementById("chatUI").style.display="flex";
@@ -169,7 +182,6 @@ function listenMessages(){
     chat.scrollTop=chat.scrollHeight;
   });
 
-  // Typing indicator
   onValue(ref(db,"rooms/"+room+"/typing"), snap=>{
     let names=[];
     snap.forEach(s=>names.push(s.key));
@@ -228,46 +240,14 @@ function leave(){ remove(ref(db,"rooms/"+room+"/users/"+user)); leaveSound.play(
 function destroyRoomConfirm(){
   if(!isAdmin) return;
   if(confirm("Are you sure you want to destroy this room?")){
-    showSharePopup();
-    const btn=document.getElementById("sharePopupBtn");
-    btn.onclick=()=>{ 
-      const link=location.origin+location.pathname;
-      if(navigator.share) navigator.share({title:"Join Chat",text:"Join my room",url:link});
-      remove(ref(db,"rooms/"+room)); 
-      location.href=location.pathname; 
-    };
+    remove(ref(db,"rooms/"+room)); 
+    location.href=location.pathname; 
   }
 }
 
 function enterAdminCode(){ const code=prompt("Enter Admin Code:"); if(!code) return; get(ref(db,"rooms/"+room+"/adminCode")).then(snap=>{ if(snap.val()===code){ isAdmin=true; document.getElementById("adminBtn").style.display="inline-block"; alert("You are now an admin!"); } else alert("Incorrect code"); }); }
 
-function shareRoom(){ 
-  const link=location.origin+location.pathname+"?room="+room; 
-  if(navigator.share){
-    navigator.share({title:"Join Chat",text:"Join my room",url:link});
-  } else {
-    prompt("Copy this link to share:", link);
-  }
-}
-
-function showSharePopup(){
-  const popup=document.getElementById("sharePopup");
-  popup.style.display="flex";
-  const btn=document.getElementById("sharePopupBtn");
-  btn.onclick=()=>{
-    const link=location.origin+location.pathname+"?room="+room;
-    if(navigator.share){
-      navigator.share({title:"Join Chat",text:"Join my room",url:link}).then(()=>popup.style.display="none");
-    } else {
-      prompt("Copy this link to share:", link);
-      popup.style.display="none";
-    }
-  };
-}
-
-function closeSharePopup(){document.getElementById("sharePopup").style.display="none";}
-
-function autoJoinFromLink(){ const params=new URLSearchParams(window.location.search); const r=params.get("room"); if(r){room=r;isAdmin=false;document.getElementById("adminBtn").style.display="none"; startChat(); showSharePopup();}}
+function autoJoinFromLink(){ const params=new URLSearchParams(window.location.search); const r=params.get("room"); if(r){room=r;isAdmin=false;document.getElementById("adminBtn").style.display="none"; startChat();}}
 
 function scheduleDestroy(time){ const delay=time-Date.now(); if(delay>0) setTimeout(()=>destroyRoomConfirm(),delay); }
 
