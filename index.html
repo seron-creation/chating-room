@@ -6,31 +6,78 @@
     <title>Seron Chat Room</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root { --wa-bg: #0b141a; --wa-header: #202c33; --wa-input: #2a3942; --wa-msg-me: #005c4b; --wa-msg-them: #202c33; }
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; background-color: #000; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        :root { 
+            --wa-bg: #0b141a; 
+            --wa-header: #202c33; 
+            --wa-input: #2a3942; 
+            --wa-msg-me: #005c4b; 
+            --wa-msg-them: #202c33; 
+        }
         
-        /* Mobile 9:16 Wrapper */
+        /* Layout Fix: 100dvh prevents the keyboard from hiding the input */
+        body, html { 
+            margin: 0; padding: 0; 
+            height: 100dvh; width: 100%; 
+            background-color: #000; 
+            display: flex; justify-content: center;
+            overflow: hidden; 
+        }
+        
         .app-container {
-            width: 100%; max-width: 450px; height: 100vh; margin: 0 auto;
-            background-color: var(--wa-bg); display: flex; flex-direction: column;
-            position: relative; border-left: 1px solid #333; border-right: 1px solid #333;
+            width: 100%; max-width: 450px; 
+            height: 100dvh; 
+            background-color: var(--wa-bg); 
+            display: flex; flex-direction: column;
+            position: relative;
         }
 
-        /* Menu Overlay */
-        #menu { position: absolute; inset: 0; z-index: 100; background: var(--wa-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; color: white; }
+        #menu { 
+            position: absolute; inset: 0; z-index: 100; 
+            background: var(--wa-bg); display: flex; 
+            flex-direction: column; align-items: center; 
+            justify-content: center; padding: 25px; 
+            color: white; 
+        }
         
-        /* Chat Area */
-        #chatBox { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 8px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; }
+        /* Chat Content area */
+        #chatBox { 
+            flex: 1; 
+            overflow-y: auto; 
+            padding: 15px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+            background-size: contain;
+        }
         
-        /* Bubbles */
-        .bubble { max-width: 85%; padding: 8px 12px; border-radius: 10px; color: white; font-size: 14px; position: relative; word-wrap: break-word; animation: slideIn 0.2s ease; }
+        .bubble { 
+            max-width: 85%; padding: 8px 12px; 
+            border-radius: 12px; color: white; 
+            font-size: 15px; position: relative; 
+            word-wrap: break-word; 
+            box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+        }
         .bubble.me { align-self: flex-end; background: var(--wa-msg-me); border-top-right-radius: 2px; }
         .bubble.them { align-self: flex-start; background: var(--wa-msg-them); border-top-left-radius: 2px; }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Controls */
-        footer { background: var(--wa-header); padding: 10px; display: flex; align-items: center; gap: 10px; }
-        input[type="text"], input[type="number"] { background: var(--wa-input); border: none; outline: none; color: white; border-radius: 8px; padding: 10px; }
+        /* Footer pinned at bottom */
+        footer { 
+            background: var(--wa-header); 
+            padding: 10px; 
+            display: flex; 
+            align-items: center; 
+            gap: 8px;
+            z-index: 10;
+        }
+        
+        #msgInput { 
+            flex: 1; background: var(--wa-input); 
+            border: none; outline: none; 
+            color: white; border-radius: 24px; 
+            padding: 10px 15px; font-size: 16px; 
+        }
+
         .hidden { display: none !important; }
     </style>
 </head>
@@ -39,29 +86,29 @@
 <div class="app-container">
     <div id="menu">
         <h1 class="text-3xl font-bold mb-2 text-emerald-500">Seron Chat</h1>
-        <p class="text-gray-400 mb-8 text-sm">Real-time, self-destructing rooms</p>
+        <p class="text-gray-400 mb-8 text-sm">Created by Seron</p>
         
-        <div class="w-full space-y-3">
-            <input id="userName" type="text" placeholder="Your Name" class="w-full">
-            <div class="h-[1px] bg-gray-700 my-4"></div>
+        <div class="w-full space-y-4">
+            <input id="userName" type="text" placeholder="Your Name" class="w-full bg-[#2a3942] p-3 rounded-lg outline-none">
             
-            <button id="btnCreate" class="w-full bg-emerald-600 hover:bg-emerald-700 p-3 rounded-lg font-bold">Create New Room</button>
-            <input id="destroyTime" type="number" placeholder="Set Destroy Time (Minutes)" class="w-full text-center">
-            
-            <div class="flex gap-2 pt-4">
-                <input id="joinId" type="text" placeholder="Enter Room Code" class="flex-1">
-                <button id="btnJoin" class="bg-blue-600 px-4 rounded-lg font-bold">Join</button>
+            <div class="border-t border-gray-700 pt-4">
+                <button id="btnCreate" class="w-full bg-emerald-600 p-3 rounded-lg font-bold mb-2">Create New Room</button>
+                <input id="destroyTime" type="number" placeholder="Destroy in (minutes)" class="w-full bg-[#2a3942] p-3 rounded-lg outline-none text-center">
+            </div>
+
+            <div class="flex gap-2 pt-2">
+                <input id="joinId" type="text" placeholder="Room Code" class="flex-1 bg-[#2a3942] p-3 rounded-lg outline-none">
+                <button id="btnJoin" class="bg-blue-600 px-6 rounded-lg font-bold">Join</button>
             </div>
         </div>
-        <p class="absolute bottom-6 text-xs text-gray-500">Created by Seron</p>
     </div>
 
-    <header class="p-3 bg-[#202c33] flex justify-between items-center shadow-lg z-10">
-        <div>
-            <div id="roomDisplay" class="text-[10px] text-emerald-400 font-mono uppercase"></div>
-            <div id="creatorName" class="text-white font-bold text-sm">Room Creator</div>
+    <header class="p-3 bg-[#202c33] flex justify-between items-center shadow-md">
+        <div class="flex flex-col">
+            <span id="roomDisplay" class="text-[10px] text-emerald-400 font-mono"></span>
+            <span id="creatorTag" class="text-white font-bold text-sm">Seron Room</span>
         </div>
-        <button id="btnAdminDestroy" class="hidden bg-red-600 text-white text-[10px] px-3 py-1 rounded-full font-bold uppercase">Destroy Room</button>
+        <button id="btnAdminDestroy" class="hidden bg-red-600 text-white text-[10px] px-3 py-1 rounded-full font-bold">DESTROY ROOM</button>
     </header>
 
     <div id="chatBox"></div>
@@ -69,18 +116,17 @@
     <div id="typingIndicator" class="bg-transparent text-[11px] text-emerald-500 px-4 italic h-5"></div>
 
     <footer>
-        <label class="cursor-pointer">
-            <span class="text-2xl">📎</span>
-            <input type="file" id="imageInput" accept="image/*" class="hidden">
+        <label class="cursor-pointer text-xl">
+            📎 <input type="file" id="imageInput" accept="image/*" class="hidden">
         </label>
-        <input id="msgInput" type="text" placeholder="Type a message..." class="flex-1 rounded-full px-4">
-        <button id="btnSend" class="bg-emerald-500 text-white w-10 h-10 rounded-full flex items-center justify-center font-bold">➤</button>
+        <input id="msgInput" type="text" placeholder="Type a message...">
+        <button id="btnSend" class="bg-emerald-500 text-white w-10 h-10 rounded-full flex items-center justify-center">➤</button>
     </footer>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getDatabase, ref, set, push, onValue, onChildAdded, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { getDatabase, ref, set, push, onValue, onChildAdded, remove, serverTimestamp, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
     import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
     const firebaseConfig = {
@@ -101,48 +147,54 @@
     let myName = "";
     let myColor = '#' + Math.floor(Math.random()*16777215).toString(16);
 
-    // --- LOGIC ---
+    // --- FUNCTIONS ---
 
     async function createRoom() {
-        myName = document.getElementById('userName').value || "User" + Math.floor(Math.random()*1000);
+        myName = document.getElementById('userName').value || "User_" + Math.floor(Math.random()*99);
         const mins = parseInt(document.getElementById('destroyTime').value) || 30;
         const roomId = Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 10);
         const adminCode = Math.floor(1000 + Math.random() * 9000) + Math.random().toString(36).substring(2, 4).toUpperCase();
-        const destroyAt = Date.now() + (mins * 60000);
-
+        
         await set(ref(db, `rooms/${roomId}`), {
             creator: myName,
             adminCode: adminCode,
-            destroyAt: destroyAt
+            destroyAt: Date.now() + (mins * 60000)
         });
 
-        alert(`ROOM CREATED!\nCode: ${roomId}\nAdmin Code: ${adminCode}\nCopy these now!`);
+        alert(`ADMIN CODE: ${adminCode}\nCopy this to destroy the room later.`);
         joinRoom(roomId, adminCode);
     }
 
     function joinRoom(roomId, inputAdminCode = null) {
         currentRoom = roomId;
-        myName = document.getElementById('userName').value || "Guest";
+        myName = myName || document.getElementById('userName').value || "Guest";
         document.getElementById('menu').classList.add('hidden');
-        document.getElementById('roomDisplay').innerText = roomId;
+        document.getElementById('roomDisplay').innerText = `ROOM: ${roomId}`;
 
-        const roomRef = ref(db, `rooms/${roomId}`);
-        onValue(roomRef, (snapshot) => {
-            if (!snapshot.exists()) {
-                alert("Room destroyed or expired.");
+        // Listen for Room Existence/Admin Status
+        onValue(ref(db, `rooms/${roomId}`), (snap) => {
+            if (!snap.exists()) {
+                alert("This room no longer exists.");
                 location.reload();
             } else {
-                const data = snapshot.val();
-                document.getElementById('creatorName').innerText = `Creator: ${data.creator}`;
+                const data = snap.val();
+                document.getElementById('creatorTag').innerText = `Creator: ${data.creator}`;
                 if (inputAdminCode === data.adminCode) {
                     document.getElementById('btnAdminDestroy').classList.remove('hidden');
                 }
             }
         });
 
-        // Load Messages
-        onChildAdded(ref(db, `messages/${roomId}`), (data) => {
-            renderMessage(data.val());
+        // Listen for Typing
+        onValue(ref(db, `typing/${roomId}`), (snap) => {
+            const users = snap.val() || {};
+            const others = Object.keys(users).filter(u => u !== myName);
+            document.getElementById('typingIndicator').innerText = others.length > 0 ? `${others[0]} is typing...` : "";
+        });
+
+        // Listen for Messages
+        onChildAdded(ref(db, `messages/${roomId}`), (snap) => {
+            renderMessage(snap.val());
         });
     }
 
@@ -152,9 +204,9 @@
         const div = document.createElement('div');
         div.className = `bubble ${isMe ? 'me' : 'them'}`;
         
-        let content = `<div style="color:${msg.color}; font-size:10px; font-weight:bold;">${msg.sender}</div>`;
+        let content = `<div style="color:${msg.color}; font-size:10px; font-weight:bold; margin-bottom:2px;">${msg.sender}</div>`;
         if (msg.type === 'image') {
-            content += `<img src="${msg.url}" class="rounded-lg mt-1 max-w-full">`;
+            content += `<img src="${msg.url}" class="rounded-lg max-w-full">`;
         } else {
             content += `<div>${msg.text}</div>`;
         }
@@ -166,7 +218,7 @@
 
     async function sendMessage() {
         const input = document.getElementById('msgInput');
-        if (!input.value || !currentRoom) return;
+        if (!input.value.trim() || !currentRoom) return;
 
         await push(ref(db, `messages/${currentRoom}`), {
             sender: myName,
@@ -176,42 +228,45 @@
             timestamp: serverTimestamp()
         });
         input.value = "";
+        set(ref(db, `typing/${currentRoom}/${myName}`), null);
     }
 
-    // --- EVENTS ---
+    // --- EVENT LISTENERS ---
+
     document.getElementById('btnCreate').onclick = createRoom;
     document.getElementById('btnJoin').onclick = () => joinRoom(document.getElementById('joinId').value);
     document.getElementById('btnSend').onclick = sendMessage;
-    document.getElementById('msgInput').onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
     
+    document.getElementById('msgInput').oninput = () => {
+        if (!currentRoom) return;
+        set(ref(db, `typing/${currentRoom}/${myName}`), true);
+        clearTimeout(window.tTimeout);
+        window.tTimeout = setTimeout(() => set(ref(db, `typing/${currentRoom}/${myName}`), null), 2000);
+    };
+
     document.getElementById('btnAdminDestroy').onclick = async () => {
-        if(confirm("Destroy this room forever?")) {
+        if (confirm("Permanently destroy this room?")) {
             await remove(ref(db, `rooms/${currentRoom}`));
             await remove(ref(db, `messages/${currentRoom}`));
+            await remove(ref(db, `typing/${currentRoom}`));
             location.reload();
         }
     };
 
-    // Handle Image Upload
     document.getElementById('imageInput').onchange = async (e) => {
         const file = e.target.files[0];
-        if(!file || !currentRoom) return;
-        const fileRef = sRef(storage, `chats/${currentRoom}/${Date.now()}_${file.name}`);
-        const snapshot = await uploadBytes(fileRef, file);
-        const url = await getDownloadURL(snapshot.ref);
-        
+        if (!file || !currentRoom) return;
+        const fileRef = sRef(storage, `uploads/${currentRoom}/${Date.now()}`);
+        const snap = await uploadBytes(fileRef, file);
+        const url = await getDownloadURL(snap.ref);
         push(ref(db, `messages/${currentRoom}`), {
-            sender: myName,
-            url: url,
-            color: myColor,
-            type: 'image',
-            timestamp: serverTimestamp()
+            sender: myName, url: url, color: myColor, type: 'image'
         });
     };
 
-    // Auto-Join via URL
+    // Auto-fill room from URL
     const urlRoom = new URLSearchParams(window.location.search).get('room');
-    if(urlRoom) document.getElementById('joinId').value = urlRoom;
+    if (urlRoom) document.getElementById('joinId').value = urlRoom;
 
 </script>
 </body>
