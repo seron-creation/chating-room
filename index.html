@@ -1,120 +1,183 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>SERON Chat Room</title>
+<title>Chat Room</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-body{
-margin:0;
-font-family:Arial;
-background:#0b141a;
-color:white;
-display:flex;
-flex-direction:column;
-align-items:center;
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #1e1f29, #0b141a);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
 }
-.brand{
-text-align:center;
-font-size:24px;
-font-weight:bold;
-color:#ff5722;
-text-shadow:0 0 15px orange;
-margin:10px;
+
+/* MENU PAGE */
+.menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 95vw;
+    max-width: 400px;
+    margin-top: 50px;
+    padding: 20px;
+    background: rgba(30, 31, 41, 0.9);
+    border-radius: 12px;
+    box-shadow: 0 0 15px rgba(255,87,34,0.5);
 }
-.container{
-width:95vw;
-max-width:420px;
-aspect-ratio:9/16;
-background:#111b21;
-display:flex;
-flex-direction:column;
-border-radius:12px;
-overflow:hidden;
+
+.menu h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #ff5722;
+    text-shadow: 0 0 8px orange;
 }
-header{
-background:#202c33;
-padding:10px;
-display:flex;
-justify-content:space-between;
-font-size:14px;
+
+.menu input {
+    width: 100%;
+    padding: 15px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
+    margin: 10px 0;
 }
-#chat{
-flex:1;
-overflow-y:auto;
-padding:10px;
+
+.menu button {
+    width: 100%;
+    padding: 15px;
+    margin: 8px 0;
+    font-size: 18px;
+    font-weight: bold;
+    color: white;
+    background: #ff5722;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
 }
-.msg{
-padding:8px;
-margin:6px;
-border-radius:8px;
-max-width:70%;
-word-wrap:break-word;
+
+.menu button:hover {
+    background: #e64a19;
+    transform: scale(1.03);
 }
-.me{ background:#005c4b; margin-left:auto; }
-.other{ background:#202c33; }
-.controls{
-display:flex;
-gap:5px;
-padding:8px;
-background:#202c33;
+
+.roomCode {
+    font-size: 16px;
+    margin-top: 15px;
+    word-break: break-word;
+    text-align: center;
 }
-input{
-flex:1;
-padding:10px;
-border:none;
-border-radius:6px;
+
+/* CHAT PAGE */
+.container {
+    width: 95vw;
+    max-width: 420px;
+    aspect-ratio: 9/16;
+    background: #111b21;
+    display: flex;
+    flex-direction: column;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 20px;
+    box-shadow: 0 0 20px rgba(255,87,34,0.4);
 }
-button{
-padding:10px;
-border:none;
-border-radius:6px;
-cursor:pointer;
-font-size:14px;
+
+header {
+    background: #202c33;
+    padding: 12px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    align-items: center;
 }
-.menu{
-text-align:center;
-margin-top:20px;
+
+#chat {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    background: #0f1b24;
 }
-.roomCode{
-font-size:18px;
-margin-top:10px;
-word-break:break-word;
+
+.msg {
+    padding: 8px;
+    margin: 6px;
+    border-radius: 10px;
+    max-width: 70%;
+    word-wrap: break-word;
 }
-.footer{
-margin-top:10px;
-color:#ff5722;
-text-shadow:0 0 10px orange;
+
+.me {
+    background: #005c4b;
+    margin-left: auto;
+}
+
+.other {
+    background: #202c33;
+}
+
+.controls {
+    display: flex;
+    gap: 6px;
+    padding: 10px;
+    background: #202c33;
+}
+
+.controls input {
+    flex: 1;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
+}
+
+.controls button {
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    background: #ff5722;
+    color: white;
+    font-weight: bold;
+    transition: all 0.3s;
+}
+
+.controls button:hover {
+    background: #e64a19;
+}
+
+.credit {
+    margin-top: 12px;
+    color: #ff5722;
+    font-size: 14px;
+    text-shadow: 0 0 6px orange;
 }
 </style>
 </head>
 <body>
 
-<div class="brand">🔥 SERON 🔥</div>
-
-<!-- MAIN MENU -->
+<!-- MENU PAGE -->
 <div id="menu" class="menu">
 <h2>Chat Room</h2>
-
 <button onclick="createRoom()">Create Room</button>
-<br><br>
-
 <input id="joinCode" placeholder="Enter Room Code">
-<br><br>
-
 <button onclick="joinRoom()">Join Room</button>
-
 <div id="roomDisplay" class="roomCode"></div>
 </div>
 
-<!-- CHAT UI -->
-<div id="chatUI" class="container" style="display:none">
-
+<!-- CHAT PAGE -->
+<div class="container" id="chatUI" style="display:none">
 <header>
 <div>Room: <span id="roomLabel"></span></div>
 <div>
 <button onclick="shareRoom()">Share</button>
-<button id="adminBtn" onclick="adminDelete()" style="display:none">Delete</button>
+<button id="adminBtn" onclick="destroyRoom()" style="display:none">Delete</button>
+<button onclick="enterAdminCode()">Admin</button>
 </div>
 </header>
 
@@ -123,146 +186,147 @@ text-shadow:0 0 10px orange;
 <div class="controls">
 <input id="msg" placeholder="Type message">
 <button onclick="sendMsg()">Send</button>
+<button onclick="sendImage()">Image</button>
+<button onclick="startVoice()">Voice</button>
 <button onclick="leave()">Leave</button>
 </div>
-
 </div>
 
-<div class="footer">🔥 SERON 🔥</div>
+<div class="credit">Created by: YourNameHere</div>
 
 <script type="module">
-
+// Firebase imports and setup (your Firebase project details)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, push, set, onValue, remove } 
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getDatabase, ref, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-/* Firebase config */
 const firebaseConfig = {
 apiKey:"AIzaSyC4...",
 authDomain:"chat-data-59467.firebaseapp.com",
 databaseURL:"https://chat-data-59467-default-rtdb.asia-southeast1.firebasedatabase.app",
-projectId:"chat-data-59467"
+projectId:"chat-data-59467",
+storageBucket:"chat-data-59467.appspot.com"
 };
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const storage = getStorage(app);
 
-/* GLOBALS */
+// Globals
 let room="";
 let user="User"+Math.floor(Math.random()*9999);
 let isAdmin=false;
+let adminCode="";
 
-/* Generate 16-char alphanumeric room code */
-function generateRoomCode(){
-const chars="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-let code="";
-for(let i=0;i<16;i++){
-code += chars.charAt(Math.floor(Math.random()*chars.length));
-}
-return code;
-}
-
-/* CREATE ROOM */
-window.createRoom=function(){
-room=generateRoomCode();
-document.getElementById("roomDisplay").innerHTML=
-"Room Code: "+room+"<br><button onclick='copyCode()'>Copy Code</button>";
-isAdmin=true;
-document.getElementById("adminBtn").style.display="inline-block";
-startChat(); // creator auto opens chat
+// Generate unique 16-char room code
+async function generateUniqueRoom(){
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "";
+  let exists = true;
+  while(exists){
+    code="";
+    for(let i=0;i<16;i++){
+      code+=chars.charAt(Math.floor(Math.random()*chars.length));
+    }
+    const snapshot = await new Promise(res=>onValue(ref(db,"rooms/"+code), snap=>res(snap.exists()), {once:true}));
+    exists = snapshot;
+  }
+  return code;
 }
 
-/* COPY ROOM CODE */
-window.copyCode=function(){
-navigator.clipboard.writeText(room);
-alert("Copied!");
+// Generate admin code: 4 digits + 2 letters
+function generateAdminCode(){
+  const digits = Math.floor(1000 + Math.random()*9000); // 4 digits
+  const letters = String.fromCharCode(65+Math.floor(Math.random()*26)) + String.fromCharCode(65+Math.floor(Math.random()*26));
+  return digits + letters;
 }
 
-/* JOIN ROOM */
-window.joinRoom=function(){
-room=document.getElementById("joinCode").value;
-if(!room){ alert("Invalid room"); return; }
-isAdmin=false;
-document.getElementById("adminBtn").style.display="none";
-startChat();
+// --- FUNCTIONS ---
+async function createRoom(){
+  room = await generateUniqueRoom();
+  adminCode = generateAdminCode();
+  isAdmin = true;
+
+  // Save room with admin code in Firebase
+  set(ref(db,"rooms/"+room),{adminCode:adminCode, destroyTime:null});
+
+  document.getElementById("roomDisplay").innerHTML=`Room Code: ${room} <br> Admin Code: ${adminCode}`;
+  document.getElementById("adminBtn").style.display="inline-block";
+
+  startChat();
 }
 
-/* START CHAT */
+function joinRoom(){
+  room=document.getElementById("joinCode").value;
+  if(!room) return alert("Enter valid room code");
+  isAdmin=false;
+  document.getElementById("adminBtn").style.display="none";
+  startChat();
+}
+
 function startChat(){
-document.getElementById("menu").style.display="none";
-document.getElementById("chatUI").style.display="flex";
-document.getElementById("roomLabel").innerText=room;
+  document.getElementById("menu").style.display="none";
+  document.getElementById("chatUI").style.display="flex";
+  document.getElementById("roomLabel").innerText=room;
 
-// Add user to room
-set(ref(db,"rooms/"+room+"/users/"+user),true);
-
-// Listen for messages
-listenMessages();
+  set(ref(db,"rooms/"+room+"/users/"+user),true);
+  listenMessages();
 }
 
-/* LISTEN CHAT */
 function listenMessages(){
-const msgRef=ref(db,"rooms/"+room+"/messages");
-onValue(msgRef,snap=>{
-let chat=document.getElementById("chat");
-chat.innerHTML="";
-snap.forEach(m=>{
-let d=m.val();
-let div=document.createElement("div");
-div.className="msg "+(d.user==user?"me":"other");
-div.innerText=d.user+": "+d.text;
-chat.appendChild(div);
-});
-chat.scrollTop = chat.scrollHeight;
-});
+  onValue(ref(db,"rooms/"+room+"/messages"), snap=>{
+    let chat=document.getElementById("chat");
+    chat.innerHTML="";
+    snap.forEach(m=>{
+      let d=m.val();
+      let div=document.createElement("div");
+      div.className="msg "+(d.user==user?"me":"other");
+      div.innerText=d.user+": "+d.text;
+      chat.appendChild(div);
+    });
+    document.getElementById("chat").scrollTop=document.getElementById("chat").scrollHeight;
+  });
 }
 
-/* SEND MESSAGE */
-window.sendMsg=function(){
-let text=document.getElementById("msg").value;
-if(!text) return;
-push(ref(db,"rooms/"+room+"/messages"),{user:user,text:text});
-document.getElementById("msg").value="";
+function sendMsg(){
+  const text=document.getElementById("msg").value;
+  if(!text) return;
+  push(ref(db,"rooms/"+room+"/messages"),{user:user,text:text});
+  document.getElementById("msg").value="";
 }
 
-/* LEAVE ROOM */
-window.leave=function(){
-remove(ref(db,"rooms/"+room+"/users/"+user));
-location.href=location.pathname;
+function leave(){
+  remove(ref(db,"rooms/"+room+"/users/"+user));
+  location.href=location.pathname;
 }
 
-/* ADMIN DELETE ROOM */
-window.adminDelete=function(){
-if(!isAdmin) return;
-if(confirm("Delete Room?")){
-remove(ref(db,"rooms/"+room));
-alert("Room Deleted");
-location.href=location.pathname;
-}
+function destroyRoom(){
+  if(!isAdmin) return;
+  if(confirm("Delete Room?")){
+    remove(ref(db,"rooms/"+room));
+    location.href=location.pathname;
+  }
 }
 
-/* SHARE ROOM */
-window.shareRoom=function(){
-let link=location.origin+location.pathname+"?room="+room;
-navigator.share?.({
-title:"Join SERON Chat",
-text:"Join my room",
-url:link
-}) || alert(link);
+function enterAdminCode(){
+  const code=prompt("Enter Admin Code:");
+  if(!code) return;
+  get(ref(db,"rooms/"+room+"/adminCode")).then(snap=>{
+    if(snap.val()===code){
+      isAdmin=true;
+      document.getElementById("adminBtn").style.display="inline-block";
+      alert("You are now an admin!");
+    } else {
+      alert("Incorrect code");
+    }
+  });
 }
 
-/* AUTO JOIN FROM DIRECT LINK */
-function autoJoinFromLink(){
-const params = new URLSearchParams(window.location.search);
-const r = params.get("room");
-if(r){
-room = r;
-isAdmin=false;
-document.getElementById("adminBtn").style.display="none";
-startChat();
+function shareRoom(){
+  let link = location.origin + location.pathname + "?room="+room;
+  navigator.share?.({title:"Join Chat",text:"Join my room",url:link}) || alert(link);
 }
-}
-window.onload = autoJoinFromLink;
 
+// TODO: Implement sendImage() and startVoice() with Firebase Storage
 </script>
 </body>
 </html>
