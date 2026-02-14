@@ -1,40 +1,205 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Create Your Valentine Proposal 💖</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Realtime Room Chat</title>
+
 <style>
-body {
+body{
   font-family: Arial;
-  text-align: center;
-  background: linear-gradient(135deg,#ff4e8a,#ff9a9e);
-  color: white;
-  padding: 20px;
+  margin:0;
+  text-align:center;
+  transition:0.3s;
 }
-.box {
-  background: rgba(255,255,255,0.2);
-  padding: 30px;
-  border-radius: 20px;
-  max-width: 400px;
-  margin: auto;
-  backdrop-filter: blur(10px);
+.dark{
+  background:#0f172a;
+  color:white;
 }
-input, textarea {
-  width: 90%;
-  padding: 10px;
-  margin: 10px;
-  border-radius: 10px;
-  border: none;
+.light{
+  background:#f1f5f9;
+  color:black;
 }
-button {
-  padding: 12px 20px;
-  border-radius: 30px;
-  border: none;
-  background: red;
-  color: white;
-  cursor: pointer;
-  font-size: 16px;
+#chat{display:none;}
+#messages{
+  height:300px;
+  overflow-y:auto;
+  border:1px solid gray;
+  margin:10px;
+  padding:10px;
+  border-radius:10px;
 }
+.msg{
+  padding:6px;
+  margin:4px;
+  border-radius:8px;
+  background:#22c55e33;
+}
+input,button{
+  padding:10px;
+  margin:5px;
+  border-radius:8px;
+  border:none;
+}
+button{
+  background:#22c55e;
+  color:white;
+}
+#typing{
+  font-size:12px;
+  opacity:0.7;
+}
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  padding:10px;
+}
+</style>
+</head>
+
+<body class="dark">
+
+<div class="topbar">
+<div id="onlineCount">Online: 0</div>
+<button onclick="toggleTheme()">🌙 / ☀</button>
+</div>
+
+<h2>Realtime Temporary Chat</h2>
+
+<div id="roomPage">
+<button onclick="createRoom()">Create Room</button><br>
+<input id="roomInput" placeholder="Enter Room ID">
+<button onclick="joinRoom()">Join Room</button>
+</div>
+
+<div id="chat">
+<h3 id="roomTitle"></h3>
+<div id="messages"></div>
+<div id="typing"></div>
+<input id="msg" placeholder="Type message" oninput="typing()">
+<button onclick="sendMsg()">Send</button>
+<div id="seen"></div>
+</div>
+
+<!-- Sounds -->
+<audio id="joinSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3"></audio>
+<audio id="leaveSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_1b2c3c.mp3"></audio>
+
+<!-- Firebase -->
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, set, push, onValue, onChildAdded, onDisconnect } 
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC4mYZ5G-WCjt7wAN0G6_B6rh1LDM10U0Q",
+  authDomain: "chat-data-59467.firebaseapp.com",
+  databaseURL: "https://chat-data-59467-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "chat-data-59467",
+  storageBucket: "chat-data-59467.firebasestorage.app",
+  messagingSenderId: "237808362163",
+  appId: "1:237808362163:web:52d25dfbffaffde12446c6"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let room="";
+let user=Math.random().toString(36).substring(2,8);
+let msgRef, userRef, typingRef;
+
+/* ROOM CREATE */
+window.createRoom=()=>{
+ room=Math.random().toString(36).substring(2,6);
+ startChat();
+}
+
+/* JOIN ROOM */
+window.joinRoom=()=>{
+ room=document.getElementById("roomInput").value;
+ startChat();
+}
+
+function startChat(){
+ document.getElementById("roomPage").style.display="none";
+ document.getElementById("chat").style.display="block";
+ document.getElementById("roomTitle").innerText="Room: "+room;
+
+ msgRef=ref(db,"rooms/"+room+"/messages");
+ userRef=ref(db,"rooms/"+room+"/users/"+user);
+ typingRef=ref(db,"rooms/"+room+"/typing/"+user);
+
+ set(userRef,true);
+ onDisconnect(userRef).remove();
+ onDisconnect(typingRef).remove();
+
+ document.getElementById("joinSound").play();
+
+ /* ONLINE COUNT */
+ onValue(ref(db,"rooms/"+room+"/users"),snap=>{
+   if(!snap.exists()) return;
+   document.getElementById("onlineCount").innerText=
+     "Online: "+Object.keys(snap.val()).length;
+ });
+
+ /* RECEIVE MSG */
+ onChildAdded(msgRef,snap=>{
+   let m=snap.val();
+   let div=document.createElement("div");
+   div.className="msg";
+   div.innerText=m.text;
+   document.getElementById("messages").appendChild(div);
+
+   document.getElementById("seen").innerText="Seen";
+ });
+
+ /* TYPING SHOW */
+ onValue(ref(db,"rooms/"+room+"/typing"),snap=>{
+   if(!snap.exists()){
+     document.getElementById("typing").innerText="";
+     return;
+   }
+   document.getElementById("typing").innerText="Someone typing...";
+ });
+}
+
+/* SEND MESSAGE */
+window.sendMsg=()=>{
+ let text=document.getElementById("msg").value;
+ if(text==="") return;
+
+ push(msgRef,{
+   text:text,
+   user:user,
+   time:Date.now()
+ });
+
+ set(typingRef,null);
+ document.getElementById("msg").value="";
+}
+
+/* TYPING */
+window.typing=()=>{
+ set(typingRef,true);
+ setTimeout(()=>set(typingRef,null),2000);
+}
+
+/* THEME SWITCH */
+window.toggleTheme=()=>{
+ let b=document.body;
+ if(b.classList.contains("dark")){
+   b.classList.remove("dark");
+   b.classList.add("light");
+ }else{
+   b.classList.remove("light");
+   b.classList.add("dark");
+ }
+}
+
+</script>
+
+</body>
+</html>}
 a { color: yellow; word-wrap: break-word; }
 </style>
 </head>
